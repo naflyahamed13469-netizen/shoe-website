@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shoe Paradise — Premium Footwear | Colombo</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -288,7 +289,7 @@ footer { background: var(--black); padding: 4rem 5% 2rem; }
       <div class="contact-info">
         <div class="c-item"><div class="c-icon">📍</div><div><div class="c-label">Location</div><div class="c-value">Colombo, Sri Lanka</div></div></div>
         <div class="c-item"><div class="c-icon">📞</div><div><div class="c-label">Phone</div><div class="c-value">0751689413</div></div></div>
-        <div class="c-item"><div class="c-icon">✉️</div><div><div class="c-label">Email</div><div class="c-value">naflyahamed13469@gmail.com</div></div></div>
+        <div class="c-item"><div class="c-icon">✉️</div><div><div class="c-label">Email</div><div class="c-value"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6e000f0802170f060f030b0a5f5d5a58572e09030f0702400d0103">[email&#160;protected]</a></div></div></div>
         <div class="c-item"><div class="c-icon">💬</div><div><div class="c-label">WhatsApp</div><div class="c-value">0751689413</div></div></div>
       </div>
       <div style="margin-top:2rem">
@@ -340,7 +341,7 @@ footer { background: var(--black); padding: 4rem 5% 2rem; }
   </div>
   <div class="footer-bottom">
     <p>© 2025 Shoe Paradise, Colombo, Sri Lanka. All rights reserved.</p>
-    <p style="color:rgba(255,255,255,0.3);font-size:0.75rem">📞 0751689413 | naflyahamed13469@gmail.com</p>
+    <p style="color:rgba(255,255,255,0.3);font-size:0.75rem">📞 0751689413 | <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="84eae5e2e8fde5ece5e9e1e0b5b7b0b2bdc4e3e9e5ede8aae7ebe9">[email&#160;protected]</a></p>
   </div>
 </footer>
 
@@ -405,7 +406,7 @@ footer { background: var(--black); padding: 4rem 5% 2rem; }
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ============================================================
 // YOUR KEYS
 // ============================================================
@@ -456,15 +457,14 @@ loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', () => {
   }
 });
 
-// Load EmailJS
-loadScript('https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js', () => {
-  try {
-    emailjs.init(EMAILJS_KEY);
-    emailjsReady = true;
-  } catch(e) {
-    console.warn('EmailJS init failed');
-  }
-});
+// EmailJS already loaded in HEAD - init directly
+try {
+  emailjs.init(EMAILJS_KEY);
+  emailjsReady = true;
+  console.log('✅ EmailJS ready!');
+} catch(e) {
+  console.warn('EmailJS init failed:', e.message);
+}
 
 // ============================================================
 // SHOW PRODUCTS IMMEDIATELY (fallback data)
@@ -699,18 +699,21 @@ async function placeOrder() {
   }
 
   // ---- Send Email via EmailJS ----
-  if (emailjsReady) {
-    try {
+  try {
+    if (typeof emailjs !== 'undefined') {
       await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-        customer_name: name, phone, address,
-        payment: payText, items: itemsList,
-        total: `Rs. ${total.toLocaleString()}`,
+        customer_name: name,
+        phone: phone,
+        address: address,
+        payment: payText,
+        items: itemsList,
+        total: 'Rs. ' + total.toLocaleString(),
         order_time: orderTime
       });
-      console.log('✅ Email sent');
-    } catch(err) {
-      console.warn('Email failed:', err.message);
+      console.log('✅ Email sent!');
     }
+  } catch(err) {
+    console.error('❌ Email error:', err.text || err.message || err);
   }
 
   // ---- Send WhatsApp ----
@@ -761,14 +764,3 @@ function sendContactMsg() {
 }
 
 // ============================================================
-// HELPERS
-// ============================================================
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
-}
-function toggleMenu() { document.getElementById('navLinks').classList.toggle('open'); }
-</script>
-</body>
-</html>
