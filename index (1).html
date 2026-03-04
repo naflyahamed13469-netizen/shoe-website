@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shoe Paradise — Premium Footwear | Colombo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --black: #0a0a0a; --gold: #C4963C; --gold-light: #E8B85A;
+  --gray: #6B6B6B; --light: #f9f9f9; --white: #ffffff;
+  --red: #e53e3e; --green: #38a169; --orange: #dd6b20;
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'DM Sans', sans-serif; background: var(--white); color: var(--black); overflow-x: hidden; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--black); }
+::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
+
+/* NAV */
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 5%; background: rgba(10,10,10,0.97); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(196,150,60,0.2); }
+.logo { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 900; color: var(--white); text-decoration: none; }
+.logo span { color: var(--gold); }
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a { text-decoration: none; color: rgba(255,255,255,0.8); font-size: 0.85rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; transition: color 0.3s; }
+.nav-links a:hover { color: var(--gold); }
+.nav-right { display: flex; align-items: center; gap: 1rem; }
+.cart-btn { background: var(--gold); color: var(--black); border: none; padding: 0.6rem 1.2rem; border-radius: 2px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; transition: all 0.3s; display: flex; align-items: center; gap: 0.5rem; }
+.cart-btn:hover { background: var(--gold-light); }
+.cart-count { background: var(--black); color: var(--gold); border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+.hamburger span { width: 25px; height: 2px; background: var(--white); }
+
+/* HERO */
+.hero { min-height: 100vh; background: linear-gradient(135deg, #0a0a0a 0%, #1a1209 60%, #0a0a0a 100%); display: flex; align-items: center; position: relative; overflow: hidden; padding: 0 5%; }
+.hero::before { content: ''; position: absolute; top: -30%; right: -10%; width: 700px; height: 700px; background: radial-gradient(circle, rgba(196,150,60,0.15) 0%, transparent 70%); border-radius: 50%; }
+.hero-content { max-width: 600px; z-index: 1; animation: fadeUp 1s ease forwards; }
+.hero-badge { display: inline-block; background: rgba(196,150,60,0.15); border: 1px solid rgba(196,150,60,0.4); color: var(--gold); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 1.5rem; }
+.hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(3rem, 6vw, 5rem); font-weight: 900; line-height: 1.05; color: var(--white); margin-bottom: 1.5rem; }
+.hero h1 span { color: var(--gold); font-style: italic; }
+.hero p { color: rgba(255,255,255,0.6); font-size: 1.05rem; line-height: 1.8; margin-bottom: 2.5rem; }
+.hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+.btn-primary { background: var(--gold); color: var(--black); padding: 1rem 2.5rem; border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; text-decoration: none; display: inline-block; }
+.btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
+.btn-secondary { background: transparent; color: var(--white); padding: 1rem 2.5rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; text-decoration: none; display: inline-block; }
+.btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+.hero-stats { display: flex; gap: 3rem; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; }
+.stat-num { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--gold); }
+.stat-label { font-size: 0.72rem; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.1em; }
+.hero-side { position: absolute; right: 5%; top: 50%; transform: translateY(-50%); width: 40%; display: flex; align-items: center; justify-content: center; }
+.shoe-display { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+.main-shoe { font-size: clamp(7rem, 13vw, 12rem); animation: float 3s ease-in-out infinite; filter: drop-shadow(0 20px 40px rgba(196,150,60,0.35)); }
+.ring { position: absolute; border-radius: 50%; border: 1px solid rgba(196,150,60,0.12); animation: spin 20s linear infinite; }
+.r1 { width: 280px; height: 280px; }
+.r2 { width: 420px; height: 420px; animation-direction: reverse; animation-duration: 30s; }
+
+/* FEATURES BAR */
+.features-bar { background: var(--gold); padding: 1.2rem 5%; display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; }
+.feat { display: flex; align-items: center; gap: 0.6rem; }
+.feat p { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--black); }
+
+/* SECTIONS */
+section { padding: 5rem 5%; }
+.sec-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.7rem; }
+.sec-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 700; color: var(--black); margin-bottom: 1rem; }
+.sec-sub { color: var(--gray); font-size: 0.95rem; line-height: 1.7; max-width: 500px; }
+
+/* LOADING */
+.loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5rem; gap: 1rem; }
+.spinner { width: 50px; height: 50px; border: 3px solid var(--light); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+.loading-screen p { color: var(--gray); font-size: 0.9rem; }
+
+/* PRODUCTS */
+.products-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 3rem; flex-wrap: wrap; gap: 1rem; }
+.products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem; }
+.product-card { background: var(--white); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.07); transition: all 0.3s; border: 1px solid rgba(0,0,0,0.05); }
+.product-card:hover { transform: translateY(-6px); box-shadow: 0 15px 40px rgba(0,0,0,0.12); }
+.product-img { height: 230px; background: linear-gradient(135deg, #f9f9f9, #f0ebe0); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.product-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+.product-card:hover .product-img img { transform: scale(1.08); }
+.product-img .p-emoji { font-size: 5.5rem; transition: transform 0.4s; }
+.product-card:hover .p-emoji { transform: scale(1.1) rotate(-5deg); }
+.p-badge { position: absolute; top: 1rem; left: 1rem; padding: 0.25rem 0.7rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; z-index: 1; }
+.badge-hot { background: var(--black); color: var(--white); }
+.badge-new { background: var(--gold); color: var(--black); }
+.badge-popular { background: var(--green); color: var(--white); }
+.wish-btn { position: absolute; top: 1rem; right: 1rem; width: 36px; height: 36px; border-radius: 50%; background: var(--white); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: all 0.3s; z-index: 1; }
+.product-info { padding: 1.5rem; }
+.p-brand { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.3rem; }
+.p-name { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; color: var(--black); margin-bottom: 0.8rem; }
+.p-stock { font-size: 0.72rem; font-weight: 600; padding: 0.25rem 0.7rem; border-radius: 4px; margin-bottom: 0.9rem; display: inline-block; }
+.s-in { background: #f0fff4; color: var(--green); }
+.s-low { background: #fffaf0; color: var(--orange); }
+.s-out { background: #fff5f5; color: var(--red); }
+.p-sizes-label { font-size: 0.74rem; font-weight: 700; color: var(--gray); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; }
+.p-sizes { display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.sz-btn { width: 36px; height: 36px; border-radius: 6px; border: 1.5px solid #e0e0e0; background: var(--white); font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+.sz-btn:hover { border-color: var(--black); background: var(--black); color: var(--white); }
+.sz-btn.sel { border-color: var(--gold); background: var(--gold); color: var(--black); }
+.p-footer { display: flex; align-items: center; justify-content: space-between; }
+.p-price { font-size: 1.4rem; font-weight: 700; color: var(--black); }
+.p-price-label { font-size: 0.7rem; color: var(--gray); }
+.add-btn { background: var(--black); color: var(--white); border: none; padding: 0.65rem 1.3rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+.add-btn:hover { background: var(--gold); color: var(--black); }
+.add-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+/* ABOUT */
+.about-section { background: var(--light); }
+.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+.about-emoji-box { background: var(--white); border-radius: 20px; padding: 3rem; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+.about-big-emoji { font-size: 7rem; animation: float 3s ease-in-out infinite; }
+.about-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem; }
+.about-stat { background: var(--black); border-radius: 12px; padding: 1.2rem; text-align: center; }
+.about-stat-num { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: var(--gold); }
+.about-stat-label { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.2rem; }
+.about-feats { display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem; }
+.about-feat { display: flex; align-items: flex-start; gap: 1rem; }
+.af-icon { font-size: 1.5rem; flex-shrink: 0; }
+.af-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.2rem; }
+.af-desc { font-size: 0.85rem; color: var(--gray); }
+
+/* CONTACT */
+.contact-section { background: var(--light); }
+.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
+.contact-info { display: flex; flex-direction: column; gap: 1.5rem; margin-top: 2rem; }
+.c-item { display: flex; align-items: center; gap: 1rem; }
+.c-icon { width: 50px; height: 50px; background: var(--gold); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+.c-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gray); margin-bottom: 0.2rem; }
+.c-value { font-weight: 700; font-size: 0.95rem; }
+.cf-box { background: var(--white); padding: 2.5rem; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+.cf-box h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; }
+.cf-inputs { display: flex; flex-direction: column; gap: 1rem; }
+.cf-inputs input, .cf-inputs textarea { padding: 0.9rem 1rem; border: 1.5px solid #e0e0e0; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; outline: none; transition: border 0.2s; width: 100%; }
+.cf-inputs input:focus, .cf-inputs textarea:focus { border-color: var(--gold); }
+.cf-submit { background: var(--black); color: var(--white); border: none; padding: 1rem; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.3s; width: 100%; }
+.cf-submit:hover { background: var(--gold); color: var(--black); }
+.wa-btn { background: #25D366; color: var(--white); border: none; padding: 1rem; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 700; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none; transition: all 0.3s; margin-top: 0.5rem; }
+.wa-btn:hover { background: #20ba5a; }
+
+/* FOOTER */
+footer { background: var(--black); padding: 4rem 5% 2rem; }
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 3rem; margin-bottom: 3rem; }
+.footer-logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 900; color: var(--white); text-decoration: none; display: block; margin-bottom: 1rem; }
+.footer-logo span { color: var(--gold); }
+.footer-desc { color: rgba(255,255,255,0.5); font-size: 0.88rem; line-height: 1.7; margin-bottom: 1.5rem; }
+.soc-row { display: flex; gap: 0.8rem; }
+.soc-btn { width: 38px; height: 38px; border-radius: 8px; background: rgba(255,255,255,0.08); border: none; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+.soc-btn:hover { background: var(--gold); color: var(--black); }
+.footer-col h4 { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--white); margin-bottom: 1.2rem; }
+.footer-col ul { list-style: none; }
+.footer-col ul li { margin-bottom: 0.7rem; }
+.footer-col ul li a { text-decoration: none; color: rgba(255,255,255,0.45); font-size: 0.85rem; transition: color 0.3s; }
+.footer-col ul li a:hover { color: var(--gold); }
+.footer-bottom { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.footer-bottom p { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
+
+/* CART SIDEBAR */
+.cart-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.cart-overlay.open { opacity: 1; pointer-events: all; }
+.cart-sidebar { position: fixed; top: 0; right: -440px; width: 440px; max-width: 100vw; height: 100vh; background: var(--white); z-index: 2001; transition: right 0.4s; display: flex; flex-direction: column; }
+.cart-sidebar.open { right: 0; }
+.cart-head { padding: 1.5rem; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+.cart-head h3 { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; }
+.close-cart-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray); }
+.cart-body { flex: 1; overflow-y: auto; padding: 1.5rem; }
+.cart-empty-box { text-align: center; padding: 3rem 1rem; }
+.cart-empty-box .e-icon { font-size: 4rem; margin-bottom: 1rem; }
+.cart-empty-box p { color: var(--gray); }
+.c-cart-item { display: flex; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #f5f5f5; }
+.c-cart-img { width: 70px; height: 70px; background: var(--light); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2rem; flex-shrink: 0; overflow: hidden; }
+.c-cart-img img { width: 100%; height: 100%; object-fit: cover; }
+.c-cart-info { flex: 1; }
+.c-cart-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.2rem; }
+.c-cart-meta { font-size: 0.75rem; color: var(--gray); margin-bottom: 0.4rem; }
+.c-cart-price { font-weight: 700; color: var(--gold); }
+.c-remove { background: none; border: none; color: var(--gray); cursor: pointer; font-size: 1rem; align-self: flex-start; }
+.cart-foot { padding: 1.5rem; border-top: 1px solid #f0f0f0; }
+.cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.cart-total-row span { font-weight: 700; }
+.t-price { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--gold); }
+.checkout-btn { width: 100%; background: var(--gold); color: var(--black); border: none; padding: 1rem; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.3s; text-transform: uppercase; }
+.checkout-btn:hover { background: var(--gold-light); }
+
+/* ORDER MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 1rem; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 20px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+.modal-header { padding: 1.5rem 2rem; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--white); z-index: 1; border-radius: 20px 20px 0 0; }
+.modal-header h3 { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; }
+.modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray); }
+.modal-body { padding: 2rem; }
+.order-item-preview { background: var(--light); border-radius: 12px; padding: 1rem 1.2rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 1rem; }
+.oip-img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; overflow: hidden; flex-shrink: 0; }
+.oip-img img { width: 100%; height: 100%; object-fit: cover; }
+.oip-name { font-weight: 700; font-size: 0.95rem; }
+.oip-price { color: var(--gold); font-weight: 700; font-size: 0.9rem; margin-top: 0.2rem; }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray); margin-bottom: 0.4rem; }
+.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.85rem 1rem; border: 1.5px solid #e0e0e0; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; outline: none; transition: border 0.2s; }
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--gold); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.order-total-box { background: var(--black); color: var(--white); border-radius: 12px; padding: 1.2rem; margin: 1.5rem 0; display: flex; justify-content: space-between; align-items: center; }
+.order-total-box span { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+.order-total-box strong { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--gold); }
+.place-order-btn { width: 100%; background: var(--gold); color: var(--black); border: none; padding: 1.1rem; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; text-transform: uppercase; }
+.place-order-btn:hover { background: var(--gold-light); }
+.place-order-btn:disabled { background: #ccc; cursor: not-allowed; }
+.wa-note { text-align: center; margin-top: 1rem; font-size: 0.8rem; color: var(--gray); }
+.wa-note span { color: #25D366; font-weight: 700; }
+
+/* SUCCESS BOX */
+.success-box { text-align: center; padding: 2rem; }
+.success-icon { font-size: 4rem; margin-bottom: 1rem; }
+.success-box h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.8rem; color: var(--green); }
+.success-box p { color: var(--gray); font-size: 0.9rem; line-height: 1.7; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--black); color: var(--white); padding: 0.9rem 1.8rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; transition: transform 0.3s; z-index: 9999; border-left: 3px solid var(--gold); white-space: nowrap; max-width: 90vw; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { border-left-color: var(--green); }
+.toast.error { border-left-color: var(--red); }
+
+/* ANIMATIONS */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* MOBILE */
+@media (max-width: 900px) { .about-grid, .contact-grid { grid-template-columns: 1fr; } .hero-side { display: none; } .footer-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 768px) { nav { padding: 1rem 5%; } .nav-links { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: rgba(10,10,10,0.98); padding: 1.5rem; gap: 1rem; } .nav-links.open { display: flex; } .hamburger { display: flex; } .hero { padding: 7rem 5% 4rem; text-align: center; } .hero-btns { justify-content: center; } .hero-stats { justify-content: center; } .footer-grid { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#home" class="logo">Shoe <span>Paradise</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#home">Home</a></li>
+    <li><a href="#products">Products</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="cart-btn" onclick="toggleCart()">🛒 Cart <span class="cart-count" id="cartCount">0</span></button>
+    <div class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-content">
+    <div class="hero-badge">🇱🇰 Colombo's #1 Shoe Store</div>
+    <h1>Walk in <span>Style &amp; Comfort</span></h1>
+    <p>Discover premium branded footwear at Shoe Paradise, Colombo. Nike, Puma, Adidas — 100% authentic brands at the best prices. Cash on delivery available!</p>
+    <div class="hero-btns">
+      <a href="#products" class="btn-primary">Shop Now →</a>
+      <a href="https://wa.me/94751689413?text=Hi! I want to order shoes from Shoe Paradise" target="_blank" class="btn-secondary">💬 WhatsApp Us</a>
+    </div>
+    <div class="hero-stats">
+      <div><div class="stat-num">500+</div><div class="stat-label">Happy Customers</div></div>
+      <div><div class="stat-num">3</div><div class="stat-label">Top Brands</div></div>
+      <div><div class="stat-num">COD</div><div class="stat-label">Cash on Delivery</div></div>
+    </div>
+  </div>
+  <div class="hero-side">
+    <div class="shoe-display">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="main-shoe">👟</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES BAR -->
+<div class="features-bar">
+  <div class="feat"><span>🚚</span><p>Delivery in Colombo</p></div>
+  <div class="feat"><span>✅</span><p>100% Authentic Brands</p></div>
+  <div class="feat"><span>💬</span><p>WhatsApp Support</p></div>
+  <div class="feat"><span>💰</span><p>Cash on Delivery</p></div>
+</div>
+
+<!-- PRODUCTS -->
+<section id="products">
+  <div class="products-header">
+    <div>
+      <div class="sec-label">Our Collection</div>
+      <h2 class="sec-title">Our Products</h2>
+      <p class="sec-sub">Premium branded shoes — Nike, Puma & Adidas at the best prices in Colombo</p>
+    </div>
+  </div>
+  <div id="productsGrid" class="products-grid">
+    <div class="loading-screen" style="grid-column: 1/-1;">
+      <div class="spinner"></div>
+      <p>Loading products...</p>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="about-section" id="about">
+  <div class="about-grid">
+    <div class="about-emoji-box">
+      <div class="about-big-emoji">👟</div>
+      <div class="about-stats">
+        <div class="about-stat"><div class="about-stat-num">500+</div><div class="about-stat-label">Customers</div></div>
+        <div class="about-stat"><div class="about-stat-num">3</div><div class="about-stat-label">Top Brands</div></div>
+        <div class="about-stat"><div class="about-stat-num">4.9★</div><div class="about-stat-label">Rating</div></div>
+        <div class="about-stat"><div class="about-stat-num">COD</div><div class="about-stat-label">Available</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="sec-label">Who We Are</div>
+      <h2 class="sec-title">About Shoe Paradise</h2>
+      <p class="sec-sub">We are Colombo's trusted shoe store bringing you Nike, Puma and Adidas at unbeatable prices. Every pair is 100% authentic and carefully selected for quality and comfort.</p>
+      <div class="about-feats">
+        <div class="about-feat"><div class="af-icon">✅</div><div><div class="af-title">100% Authentic Products</div><div class="af-desc">All shoes are genuine branded — no fakes, ever!</div></div></div>
+        <div class="about-feat"><div class="af-icon">🚚</div><div><div class="af-title">Delivery in Colombo</div><div class="af-desc">We deliver right to your doorstep across Colombo.</div></div></div>
+        <div class="about-feat"><div class="af-icon">💰</div><div><div class="af-title">Cash on Delivery</div><div class="af-desc">Pay when you receive your shoes. No advance needed!</div></div></div>
+        <div class="about-feat"><div class="af-icon">💬</div><div><div class="af-title">WhatsApp Support</div><div class="af-desc">Chat with us on WhatsApp anytime for instant help.</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="contact-section">
+  <div class="contact-grid">
+    <div>
+      <div class="sec-label">Reach Us</div>
+      <h2 class="sec-title">Contact Us</h2>
+      <p class="sec-sub">Want to order or have a question? Contact us anytime!</p>
+      <div class="contact-info">
+        <div class="c-item"><div class="c-icon">📍</div><div><div class="c-label">Location</div><div class="c-value">Colombo, Sri Lanka</div></div></div>
+        <div class="c-item"><div class="c-icon">📞</div><div><div class="c-label">Phone</div><div class="c-value">0751689413</div></div></div>
+        <div class="c-item"><div class="c-icon">✉️</div><div><div class="c-label">Email</div><div class="c-value">naflyahamed13469@gmail.com</div></div></div>
+        <div class="c-item"><div class="c-icon">💬</div><div><div class="c-label">WhatsApp</div><div class="c-value">0751689413</div></div></div>
+      </div>
+      <div style="margin-top:2rem">
+        <a href="https://wa.me/94751689413?text=Hi Shoe Paradise! I want to order shoes" target="_blank" class="wa-btn">💬 Order via WhatsApp</a>
+      </div>
+    </div>
+    <div class="cf-box">
+      <h3>Send a Message</h3>
+      <div class="cf-inputs">
+        <input type="text" placeholder="Your Name" id="cName">
+        <input type="tel" placeholder="Your Phone Number" id="cPhone">
+        <input type="email" placeholder="Your Email (optional)" id="cEmail">
+        <textarea placeholder="Your message or what shoes you want..." rows="4" id="cMessage"></textarea>
+        <button class="cf-submit" onclick="sendContactMsg()">Send Message ✉️</button>
+        <a href="https://wa.me/94751689413?text=Hi Shoe Paradise! I want to order shoes" target="_blank" class="wa-btn">💬 Chat on WhatsApp Instead</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <a href="#home" class="footer-logo">Shoe <span>Paradise</span></a>
+      <p class="footer-desc">Colombo's trusted shoe store. Nike, Puma, Adidas — 100% authentic at the best prices. Cash on delivery available across Colombo.</p>
+      <div class="soc-row">
+        <button class="soc-btn">📘</button>
+        <button class="soc-btn">📸</button>
+        <button class="soc-btn" onclick="window.open('https://wa.me/94751689413')">💬</button>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#products">Products</a></li>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Our Brands</h4>
+      <ul>
+        <li><a href="#">Nike</a></li>
+        <li><a href="#">Puma</a></li>
+        <li><a href="#">Adidas</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Shoe Paradise, Colombo, Sri Lanka. All rights reserved.</p>
+    <p style="color:rgba(255,255,255,0.3);font-size:0.75rem">📞 0751689413 | naflyahamed13469@gmail.com</p>
+  </div>
+</footer>
+
+<!-- CART SIDEBAR -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-head">
+    <h3>🛒 Your Cart</h3>
+    <button class="close-cart-btn" onclick="toggleCart()">✕</button>
+  </div>
+  <div class="cart-body" id="cartBody">
+    <div class="cart-empty-box"><div class="e-icon">👟</div><p>Your cart is empty!<br>Add some shoes 😊</p></div>
+  </div>
+  <div class="cart-foot">
+    <div class="cart-total-row"><span>Total:</span><span class="t-price" id="cartTotal">Rs. 0</span></div>
+    <button class="checkout-btn" onclick="openOrderModal()">Place Order →</button>
+  </div>
+</div>
+
+<!-- ORDER MODAL -->
+<div class="modal-overlay" id="orderModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📦 Place Your Order</h3>
+      <button class="modal-close" onclick="closeOrderModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="orderForm">
+        <div id="cartSummaryModal"></div>
+        <div class="form-group"><label>Full Name *</label><input type="text" id="oName" placeholder="Enter your full name"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Phone Number *</label><input type="tel" id="oPhone" placeholder="07X XXX XXXX"></div>
+          <div class="form-group"><label>WhatsApp Number</label><input type="tel" id="oWhatsapp" placeholder="07X XXX XXXX"></div>
+        </div>
+        <div class="form-group"><label>Delivery Address *</label><textarea id="oAddress" placeholder="Your full address in Colombo..." rows="3"></textarea></div>
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select id="oPayment">
+            <option value="cod">💰 Cash on Delivery (Pay when received)</option>
+            <option value="bank">🏦 Bank Transfer</option>
+          </select>
+        </div>
+        <div class="order-total-box">
+          <span>Total Amount to Pay</span>
+          <strong id="modalTotal">Rs. 0</strong>
+        </div>
+        <button class="place-order-btn" id="placeOrderBtn" onclick="placeOrder()">✅ Confirm Order</button>
+        <p class="wa-note">Order will be saved to database + sent to our <span>WhatsApp & Email</span> instantly!</p>
+      </div>
+      <div id="orderSuccess" style="display:none">
+        <div class="success-box">
+          <div class="success-icon">🎉</div>
+          <h3>Order Placed Successfully!</h3>
+          <p>Thank you! Your order is confirmed.<br>We will contact you on <strong id="confirmPhone"></strong> shortly.<br><br>For quick help WhatsApp us: <strong>0751689413</strong></p>
+          <br>
+          <a href="https://wa.me/94751689413" target="_blank" class="wa-btn" style="display:flex">💬 Chat on WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================
+// CONFIGURATION — YOUR REAL KEYS
+// ============================================
+const SUPABASE_URL = 'https://spxbwelzehyiaaeszqou.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNweGJ3ZWx6ZWh5aWFhZXN6cW91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MTgzOTcsImV4cCI6MjA4ODE5NDM5N30.7cHltwiS4ljjK2WjV-cQ8o1qLxOcyICWcj7d0Jt_oXg';
+const EMAILJS_SERVICE = 'service_r61b4iq';
+const EMAILJS_TEMPLATE = 'template_npi0qy9';
+const EMAILJS_KEY = 'cDs9q2WSisUKIMu8qetvl';
+const WHATSAPP_NUMBER = '94751689413';
+
+// ============================================
+// INITIALIZE SUPABASE & EMAILJS
+// ============================================
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+emailjs.init(EMAILJS_KEY);
+
+// ============================================
+// STATE
+// ============================================
+let cart = [];
+let selectedSizes = {};
+let wishlist = new Set();
+let productsData = [];
+
+// ============================================
+// LOAD PRODUCTS FROM SUPABASE
+// ============================================
+async function loadProducts() {
+  try {
+    const { data, error } = await db
+      .from('products')
+      .select('*')
+      .order('id');
+
+    if (error) throw error;
+
+    productsData = data;
+    renderProducts(data);
+  } catch (err) {
+    console.error('Error loading products:', err);
+    // Fallback to demo data if Supabase fails
+    productsData = [
+      { id:1, brand:'Nike', name:'Nike Sneakers', price:4000, stock:12, sizes:'6,7,8', image_url:'', emoji:'👟' },
+      { id:2, brand:'Puma', name:'Puma Sports Shoes', price:6000, stock:10, sizes:'9,10,11', image_url:'', emoji:'🥿' },
+      { id:3, brand:'Adidas', name:'Adidas Classic', price:6999, stock:12, sizes:'7,8,9,10', image_url:'', emoji:'👟' }
+    ];
+    renderProducts(productsData);
+    showToast('⚠️ Using offline data — check Supabase connection', 'error');
+  }
+}
+
+// ============================================
+// RENDER PRODUCTS
+// ============================================
+function renderProducts(products) {
+  const grid = document.getElementById('productsGrid');
+
+  if (!products || products.length === 0) {
+    grid.innerHTML = `<div class="loading-screen" style="grid-column:1/-1"><p>No products found. Add products in Supabase!</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = products.map(p => {
+    const sizes = (p.sizes || '').split(',').map(s => s.trim()).filter(Boolean);
+    const sel = selectedSizes[p.id] || '';
+
+    // Stock status
+    const stockHTML = p.stock <= 0
+      ? `<span class="p-stock s-out">❌ Out of Stock</span>`
+      : p.stock <= 3
+      ? `<span class="p-stock s-low">⚠️ Only ${p.stock} left!</span>`
+      : p.stock <= 7
+      ? `<span class="p-stock s-low">⚠️ Low Stock — ${p.stock} pairs</span>`
+      : `<span class="p-stock s-in">✅ In Stock — ${p.stock} pairs</span>`;
+
+    // Image or emoji
+    const imgHTML = p.image_url
+      ? `<img src="${p.image_url}" alt="${p.name}" onerror="this.parentElement.innerHTML='<div class=\\'p-emoji\\'>${p.emoji || '👟'}</div>'">`
+      : `<div class="p-emoji">${p.emoji || '👟'}</div>`;
+
+    // Sizes
+    const sizesHTML = sizes.map(s =>
+      `<button class="sz-btn ${sel===s?'sel':''}" onclick="selectSize(${p.id},'${s}',this)">${s}</button>`
+    ).join('');
+
+    return `
+    <div class="product-card" id="product-${p.id}">
+      <div class="product-img">
+        <span class="p-badge badge-hot">HOT 🔥</span>
+        <button class="wish-btn ${wishlist.has(p.id)?'active':''}" onclick="toggleWish(${p.id},this)">
+          ${wishlist.has(p.id)?'❤️':'🤍'}
+        </button>
+        ${imgHTML}
+      </div>
+      <div class="product-info">
+        <div class="p-brand">${p.brand}</div>
+        <div class="p-name">${p.name}</div>
+        ${stockHTML}
+        <div class="p-sizes-label">Select Size (UK):</div>
+        <div class="p-sizes">${sizesHTML}</div>
+        <div class="p-footer">
+          <div>
+            <div class="p-price-label">Price</div>
+            <div class="p-price">Rs. ${Number(p.price).toLocaleString()}</div>
+          </div>
+          <button class="add-btn" 
+            ${p.stock <= 0 ? 'disabled' : ''} 
+            onclick="addToCart(${p.id})"
+            id="addBtn-${p.id}">
+            ${p.stock <= 0 ? 'Out of Stock' : 'Add to Cart 🛒'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================
+// SELECT SIZE
+// ============================================
+function selectSize(id, size, btn) {
+  selectedSizes[id] = size;
+  const card = btn.closest('.product-card');
+  card.querySelectorAll('.sz-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+// ============================================
+// WISHLIST
+// ============================================
+function toggleWish(id, btn) {
+  if (wishlist.has(id)) {
+    wishlist.delete(id); btn.textContent = '🤍'; btn.classList.remove('active');
+    showToast('Removed from wishlist');
+  } else {
+    wishlist.add(id); btn.textContent = '❤️'; btn.classList.add('active');
+    showToast('Added to wishlist ❤️');
+  }
+}
+
+// ============================================
+// ADD TO CART
+// ============================================
+function addToCart(id) {
+  const p = productsData.find(p => p.id === id);
+  if (!p) return;
+  const size = selectedSizes[id];
+  if (!size) { showToast('⚠️ Please select a size first!', 'error'); return; }
+  if (p.stock <= 0) { showToast('❌ This shoe is out of stock!', 'error'); return; }
+
+  const existing = cart.find(i => i.id === id && i.size === size);
+  if (existing) {
+    if (existing.qty >= p.stock) { showToast('⚠️ Not enough stock!', 'error'); return; }
+    existing.qty++;
+  } else {
+    cart.push({ ...p, size, qty: 1 });
+  }
+  updateCartCount();
+  showToast(`${p.name} (Size ${size}) added to cart! 🛒`, 'success');
+}
+
+// ============================================
+// REMOVE FROM CART
+// ============================================
+function removeFromCart(id, size) {
+  cart = cart.filter(i => !(i.id === id && i.size === size));
+  updateCartCount();
+  renderCart();
+}
+
+// ============================================
+// UPDATE CART COUNT
+// ============================================
+function updateCartCount() {
+  const count = cart.reduce((a, i) => a + i.qty, 0);
+  const total = cart.reduce((a, i) => a + (i.price * i.qty), 0);
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('cartTotal').textContent = `Rs. ${total.toLocaleString()}`;
+}
+
+// ============================================
+// RENDER CART
+// ============================================
+function renderCart() {
+  const body = document.getElementById('cartBody');
+  if (!cart.length) {
+    body.innerHTML = `<div class="cart-empty-box"><div class="e-icon">👟</div><p>Your cart is empty!<br>Add some shoes 😊</p></div>`;
+    return;
+  }
+  body.innerHTML = cart.map(i => `
+    <div class="c-cart-item">
+      <div class="c-cart-img">
+        ${i.image_url ? `<img src="${i.image_url}" alt="${i.name}">` : i.emoji || '👟'}
+      </div>
+      <div class="c-cart-info">
+        <div class="c-cart-name">${i.name}</div>
+        <div class="c-cart-meta">Size: ${i.size} | Qty: ${i.qty}</div>
+        <div class="c-cart-price">Rs. ${(i.price * i.qty).toLocaleString()}</div>
+      </div>
+      <button class="c-remove" onclick="removeFromCart(${i.id},'${i.size}')">✕</button>
+    </div>
+  `).join('');
+}
+
+// ============================================
+// TOGGLE CART
+// ============================================
+function toggleCart() {
+  const isOpen = document.getElementById('cartSidebar').classList.contains('open');
+  if (!isOpen) renderCart();
+  document.getElementById('cartOverlay').classList.toggle('open');
+  document.getElementById('cartSidebar').classList.toggle('open');
+  document.body.style.overflow = isOpen ? '' : 'hidden';
+}
+
+// ============================================
+// OPEN ORDER MODAL
+// ============================================
+function openOrderModal() {
+  if (!cart.length) { showToast('Your cart is empty!', 'error'); return; }
+  toggleCart();
+  const total = cart.reduce((a, i) => a + (i.price * i.qty), 0);
+  document.getElementById('modalTotal').textContent = `Rs. ${total.toLocaleString()}`;
+  document.getElementById('cartSummaryModal').innerHTML = cart.map(i => `
+    <div class="order-item-preview">
+      <div class="oip-img">
+        ${i.image_url ? `<img src="${i.image_url}" alt="${i.name}">` : (i.emoji || '👟')}
+      </div>
+      <div>
+        <div class="oip-name">${i.name} — Size ${i.size} × ${i.qty}</div>
+        <div class="oip-price">Rs. ${(i.price * i.qty).toLocaleString()}</div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('orderForm').style.display = 'block';
+  document.getElementById('orderSuccess').style.display = 'none';
+  document.getElementById('orderModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeOrderModal() {
+  document.getElementById('orderModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ============================================
+// PLACE ORDER — MAIN FUNCTION
+// ============================================
+async function placeOrder() {
+  const name = document.getElementById('oName').value.trim();
+  const phone = document.getElementById('oPhone').value.trim();
+  const whatsapp = document.getElementById('oWhatsapp').value.trim() || phone;
+  const address = document.getElementById('oAddress').value.trim();
+  const payment = document.getElementById('oPayment').value;
+
+  if (!name) { showToast('⚠️ Please enter your name!', 'error'); return; }
+  if (!phone) { showToast('⚠️ Please enter your phone number!', 'error'); return; }
+  if (!address) { showToast('⚠️ Please enter your delivery address!', 'error'); return; }
+
+  const btn = document.getElementById('placeOrderBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Processing...';
+
+  const total = cart.reduce((a, i) => a + (i.price * i.qty), 0);
+  const itemsList = cart.map(i => `${i.name} (Size ${i.size}) x${i.qty} = Rs.${(i.price*i.qty).toLocaleString()}`).join('\n');
+  const payText = payment === 'cod' ? 'Cash on Delivery' : 'Bank Transfer';
+  const orderTime = new Date().toLocaleString('en-LK', { timeZone: 'Asia/Colombo' });
+
+  try {
+    // ---- STEP 1: Save order to Supabase ----
+    const orderData = {
+      customer_name: name,
+      phone: phone,
+      address: address,
+      payment: payText,
+      items: itemsList,
+      total: total,
+      status: 'pending'
+    };
+
+    const { data: orderResult, error: orderError } = await db
+      .from('orders')
+      .insert([orderData])
+      .select();
+
+    if (orderError) throw orderError;
+    console.log('✅ Order saved to database:', orderResult);
+
+    // ---- STEP 2: Reduce stock for each item ----
+    for (const item of cart) {
+      const product = productsData.find(p => p.id === item.id);
+      if (product) {
+        const newStock = Math.max(0, product.stock - item.qty);
+        const { error: stockError } = await db
+          .from('products')
+          .update({ stock: newStock })
+          .eq('id', item.id);
+
+        if (stockError) console.error('Stock update error:', stockError);
+        else {
+          // Update local data
+          product.stock = newStock;
+          // Update UI stock display
+          updateStockUI(item.id, newStock);
+        }
+      }
+    }
+    console.log('✅ Stock reduced successfully');
+
+    // ---- STEP 3: Send Email via EmailJS ----
+    try {
+      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+        customer_name: name,
+        phone: phone,
+        address: address,
+        payment: payText,
+        items: itemsList,
+        total: `Rs. ${total.toLocaleString()}`,
+        order_time: orderTime,
+        to_email: 'naflyahamed13469@gmail.com'
+      });
+      console.log('✅ Email sent successfully');
+    } catch (emailErr) {
+      console.error('Email error (non-critical):', emailErr);
+    }
+
+    // ---- STEP 4: Send WhatsApp notification ----
+    const waItems = cart.map(i => `• ${i.name} (Size ${i.size}) x${i.qty} = Rs.${(i.price*i.qty).toLocaleString()}`).join('%0A');
+    const waMsg = `🛒 *NEW ORDER — Shoe Paradise*%0A%0A` +
+      `👤 *Name:* ${name}%0A` +
+      `📞 *Phone:* ${phone}%0A` +
+      `📍 *Address:* ${address}%0A%0A` +
+      `*Items:*%0A${waItems}%0A%0A` +
+      `💰 *Total: Rs.${total.toLocaleString()}*%0A` +
+      `💳 *Payment: ${payText}*%0A` +
+      `🕐 *Time: ${orderTime}*`;
+
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${waMsg}`, '_blank');
+
+    // ---- STEP 5: Show success ----
+    document.getElementById('confirmPhone').textContent = phone;
+    document.getElementById('orderForm').style.display = 'none';
+    document.getElementById('orderSuccess').style.display = 'block';
+
+    // Clear cart
+    cart = [];
+    updateCartCount();
+
+    showToast('🎉 Order placed successfully!', 'success');
+
+  } catch (err) {
+    console.error('Order error:', err);
+    showToast('❌ Error placing order. Please try WhatsApp!', 'error');
+    btn.disabled = false;
+    btn.textContent = '✅ Confirm Order';
+  }
+}
+
+// ============================================
+// UPDATE STOCK UI
+// ============================================
+function updateStockUI(productId, newStock) {
+  const card = document.getElementById(`product-${productId}`);
+  if (!card) return;
+
+  const stockEl = card.querySelector('.p-stock');
+  const addBtn = card.querySelector('.add-btn');
+
+  if (newStock <= 0) {
+    if (stockEl) { stockEl.className = 'p-stock s-out'; stockEl.textContent = '❌ Out of Stock'; }
+    if (addBtn) { addBtn.disabled = true; addBtn.textContent = 'Out of Stock'; }
+  } else if (newStock <= 3) {
+    if (stockEl) { stockEl.className = 'p-stock s-low'; stockEl.textContent = `⚠️ Only ${newStock} left!`; }
+  } else if (newStock <= 7) {
+    if (stockEl) { stockEl.className = 'p-stock s-low'; stockEl.textContent = `⚠️ Low Stock — ${newStock} pairs`; }
+  } else {
+    if (stockEl) { stockEl.className = 'p-stock s-in'; stockEl.textContent = `✅ In Stock — ${newStock} pairs`; }
+  }
+}
+
+// ============================================
+// CONTACT FORM
+// ============================================
+function sendContactMsg() {
+  const name = document.getElementById('cName').value.trim();
+  const phone = document.getElementById('cPhone').value.trim();
+  const message = document.getElementById('cMessage').value.trim();
+  if (!name || !message) { showToast('⚠️ Please fill in name and message!', 'error'); return; }
+  const msg = `Hi Shoe Paradise! 👟%0AName: ${name}%0APhone: ${phone}%0AMessage: ${message}`;
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
+  showToast('✉️ Opening WhatsApp!', 'success');
+  document.getElementById('cName').value = '';
+  document.getElementById('cPhone').value = '';
+  document.getElementById('cMessage').value = '';
+}
+
+// ============================================
+// HELPERS
+// ============================================
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type}`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function toggleMenu() {
+  document.getElementById('navLinks').classList.toggle('open');
+}
+
+// ============================================
+// INIT — Load products when page opens
+// ============================================
+loadProducts();
+</script>
+</body>
+</html>
