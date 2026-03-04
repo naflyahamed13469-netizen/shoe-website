@@ -832,7 +832,6 @@
         <!-- HERO -->
         <section class="hero">
           <div class="hero-banner">
-            <!-- This image can be your own banner; JS will swap to first product image if available -->
             <img id="heroImage" src="https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Shoes hero banner" />
             <div class="hero-overlay">
               <div class="hero-copy">
@@ -1137,7 +1136,6 @@
       document.getElementById("focusBreadcrumb").textContent =
         (product.brand || "Shoe Paradise").toUpperCase();
 
-      // size pills
       const grid = document.getElementById("sizeGrid");
       grid.innerHTML = "";
       if (sizes.length === 0) {
@@ -1225,7 +1223,6 @@
       }
       emptyState.style.display = "none";
 
-      // use first product image as hero if available
       const first = state.products[0];
       if (first && first.image_url) {
         const heroImg = document.getElementById("heroImage");
@@ -1258,7 +1255,7 @@
             <button class="btn-ghost view-btn">View details</button>
             <button class="btn-ghost-dark add-btn">Add to cart</button>
           </div>
-        `;
+        ";
 
         // whole card opens detail
         card.querySelector(".product-media").addEventListener("click", (e) => {
@@ -1270,7 +1267,6 @@
           openProductModal(product);
         });
 
-        // quick add: default to first size or Free
         card.querySelector(".add-btn").addEventListener("click", (e) => {
           e.stopPropagation();
           const size = sizes.length ? sizes[0] : "Free";
@@ -1343,6 +1339,7 @@
         timeStyle: "short"
       });
 
+      // MUST match Supabase column names exactly
       const orderRow = {
         customer_name: formData.customerName,
         phone: formData.phone,
