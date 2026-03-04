@@ -451,9 +451,11 @@ function loadScript(src, callback) {
 loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', () => {
   try {
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('✅ Supabase connected!');
     loadProductsFromSupabase();
   } catch(e) {
-    console.warn('Supabase init failed, using fallback data');
+    console.warn('Supabase init failed:', e.message);
+    renderProducts(FALLBACK_PRODUCTS);
   }
 });
 
@@ -486,12 +488,28 @@ async function loadProductsFromSupabase() {
       .order('id');
     if (error) throw error;
     if (data && data.length > 0) {
-      productsData = data;
-      renderProducts(data);
-      console.log('✅ Products loaded from Supabase');
+      // Fix column names — handle "image url" OR "image_url"
+      const fixed = data.map(p => ({
+        ...p,
+        id: p.id,
+        brand: p.brand || '',
+        name: p.name || '',
+        price: Number(p.price) || 0,
+        stock: Number(p.stock) || 0,
+        sizes: p.sizes || '',
+        emoji: p.emoji || '👟',
+        image_url: (p.image_url || p['image url'] || p.imageurl || p.image || '').trim()
+      }));
+      productsData = fixed;
+      renderProducts(fixed);
+      console.log('✅ Loaded from Supabase:', fixed.length, 'products');
+    } else {
+      console.warn('No products found in Supabase — check your table!');
+      renderProducts(FALLBACK_PRODUCTS);
     }
   } catch(err) {
-    console.warn('Using fallback products:', err.message);
+    console.warn('Supabase error:', err.message, '— using fallback');
+    renderProducts(FALLBACK_PRODUCTS);
   }
 }
 
